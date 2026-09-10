@@ -1,0 +1,27 @@
+$(function() {
+    var graphs = $('img.graph');
+
+    graphs.each(function(index) {
+        buildChart($(this), index);
+    });
+
+    function buildChart(selector, index) {
+        $.ajax({
+            url: '/graphs',
+            data: {
+                id: selector.attr('alt')
+            },
+            dataType: 'json',
+            success: function(data) {
+                selector.before('<div class="graph" id="chart-' + index + '"></div>');
+                selector.remove();
+
+                var block = $('#chart-' + index);
+                block.highcharts(data);
+            },
+            error: function(error) {
+                selector.remove();
+            }
+        });
+    }
+});

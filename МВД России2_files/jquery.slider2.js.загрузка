@@ -1,0 +1,163 @@
+(function($) {
+
+    $.fn.slider2 = function(option) {
+
+        option = $.extend({}, $.fn.slider2.option, option);
+
+        return this.each(function() {
+
+            $(this).children().wrapAll('<div class="' + option.container + '"></div>');
+
+            var e = $(this),
+                c = e.children(),
+                ar = c.children(),
+                total = ar.length,
+                rotate, $active, $exactive, nav = [],
+                action = false,
+                loaded = total,
+                interval_auto;
+
+            if (total < 2) {
+                return false;
+            };
+
+            ar.each(function() {
+                var el = $(this);
+                if (el.find('img').length) {
+                    var img = new Image();
+                    $(img).load(function() {
+                        loaded -= 1;
+                        if (!loaded && total > 1) init();
+                    });
+                    img.src = el.find('img').attr('src');
+                } else {
+                    loaded -= 1;
+                    if (!loaded && total > 1) init();
+                };
+            });
+
+            function init() {
+                e.append('<div class="slider2-nav"><a href="#" class="' + option.prev + '">Prev</a><a href="#" class="' + option.next + '">Next</a><div class="slider2-nav-dot"></div></div>');
+
+                c.css({
+                    'position': 'relative',
+                    'overflow': 'hidden'
+                });
+                ar.css({
+                    'position': 'absolute',
+                    'top': '0',
+                    'display': 'none'
+                }).first().css({
+                    'position': 'relative',
+                    'display': 'block'
+                }).addClass('active');
+
+                if (option.pagination) {
+                    ar.each(function(i, v) {
+                        $(this).attr('rel', i);
+                        nav.push($('<span' + ((!i) ? ' class="active"' : '') + '>' + i + '</span>'));
+                    });
+                    e.find('.slider2-nav-dot').append(nav);
+                };
+                option.onLoad(ar);
+                option.onChange(e, ar, ar.first());
+
+                rotate = function(direct, n) {
+                    if (!action) {
+                        $exactive = ar.filter('.active');
+                        if (typeof n == 'undefined') $active = (direct < 0) ? $exactive.next() : $exactive.prev();
+                        else $active = $(ar[n]);
+                        if ($active.length == 0) {
+                            $active = (direct < 0) ? ar.first() : ar.last();
+                        };
+                        var i_widht = $exactive.outerWidth();
+
+                        $exactive.removeClass('active').css({
+                            'left': '0%'
+                        }).stop(true).animate({
+                            left: (100 * direct) + '%'
+                        }, option.sliderSpeed, 'swing', function() {
+                            $exactive.css({
+                                'position': 'absolute',
+                                'display': 'none'
+                            });
+                            action = false;
+                        });
+                        $active.addClass('active').css({
+                            'left': (-100 * direct) + '%',
+                            'display': 'block',
+                            'width': i_widht
+                        }).stop(true).animate({
+                            left: '0%'
+                        }, option.sliderSpeed, 'swing', function() {
+                            $active.css({
+                                'position': 'relative',
+                                'width': ''
+                            });
+                            if (option.pagination) $(nav[$active.attr('rel')]).addClass('active').siblings().removeClass('active');
+                            action = false;
+                        });
+                        $active.find(':visible').trigger('visible')
+                        $exactive.siblings().find(':hidden').trigger('hidden');
+                        action = true;
+                    };
+                };
+
+                $('.' + option.prev, e).click(function() {
+                    clearInterval(interval_auto);
+                    rotate(1);
+                    option.onChange(e, ar, $active);
+                    return false;
+                });
+                $('.' + option.next, e).click(function() {
+                    clearInterval(interval_auto);
+                    rotate(-1);
+                    option.onChange(e, ar, $active);
+                    return false;
+                });
+
+                if (option.pagination) {
+                    $.each(nav, function() {
+                        $(this).click(function() {
+                            clearInterval(interval_auto);
+                            var cur = ar.filter('.active').attr('rel');
+                            var n = parseInt($(this).text())
+                            if (n != cur) rotate((n > cur) ? -1 : 1, n);
+                            option.onChange(e, ar, $active);
+                            return false;
+                        });
+                    });
+                };
+
+                if (option.autoplay) {
+                    $(document).ready(function() {
+                        interval_auto = setInterval(auto, option.autoplaySpeed);
+
+                        function auto() {
+                            rotate(-1);
+                            option.onChange(e, ar, $active);
+                        };
+                    });
+                    ar.bind('click', function() {
+                        clearInterval(interval_auto);
+                    });
+                };
+            };
+
+        });
+
+
+    };
+
+    $.fn.slider2.option = {
+        container: 'slider2-container',
+        next: 'slider2-nav-next',
+        prev: 'slider2-nav-prev',
+        pagination: false,
+        autoplay: false,
+        autoplaySpeed: 5000,
+        sliderSpeed: 300,
+        onLoad: function() {},
+        onChange: function() {}
+    };
+})(jQuery);

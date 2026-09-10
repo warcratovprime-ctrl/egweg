@@ -1,0 +1,562 @@
+// popup ***
+// 	$('a').popup();
+//	$('a').popup({
+//		overlay: '#overlay',
+//		layer: '#layer',
+//		type: 'iframe/html/image/ajax',
+//		width: 560,
+//		height: 315
+//	});
+// 	$('a').popup('update');
+// 	$('a').popup('destroy');
+
+(function($) {
+
+    $.fn.popup = function(method) {
+        if ($.fn.popup.methods[method]) {
+            return $.fn.popup.methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+        } else if (typeof method === 'object' || !method) {
+            return $.fn.popup.methods.init.apply(this, arguments);
+        } else {
+            $.error('Method ' + method + ' does not exist');
+        }
+    };
+
+    $.popup = function(selector) {
+        if (typeof selector === 'string') {
+            var a = $('<a href="' + selector + '"></a>');
+            return $.fn.popup.methods.init.apply(a, Array.prototype.slice.call(arguments, 1)).trigger('open');
+        } else {
+            $.error('Error');
+        }
+    };
+
+    $.fn.popup.methods = {
+
+        init: function(options, functions) {
+
+            var selector = this.selector.replace(/[#]+/g, '1_').replace(/[\.]+/g, '2_').replace(/[^a-z0-9_]+/ig, '').slice(0, 50);
+
+            options = $.extend({}, $.fn.popup.options, options);
+            functions = $.fn.popup.functions;
+
+            var template = '<div class="popup">' +
+                '<div class="popup-wrapper">' +
+                '<div class="popup-holder">' +
+                '<div class="popup-title"></div>' +
+                '<div class="popup-content"></div>' +
+                '</div>' +
+                '<div class="popup-custom"></div>' +
+                '<div class="popup-count"></div>' +
+                '<div class="popup-error">Error</div>' +
+                '<a class="popup-but-close" href="#close">Close</a>' +
+                '<a class="popup-but-prev" href="#prev">Prev</a>' +
+                '<a class="popup-but-next" href="#next">Next</a>' +
+                '</div>' +
+                '<div class="popup-preload">Loading...</div>' +
+                '</div>',
+                template_holder = '<div class="popup-holder">' +
+                '<div class="popup-title"></div>' +
+                '<div class="popup-content"></div>' +
+                '</div>',
+                body = $('body'),
+                hold = {
+                    o: $(options.overlay),
+                    l: $(options.layer),
+                    p: $(template),
+                    h: $(template_holder)
+                },
+                tr = {
+                    open: false
+                },
+                nav = {
+                    index: 0,
+                    prev: null,
+                    next: null
+                },
+                keeper = $.fn.popup.keeper[selector] = {},
+                parent = false,
+                line = false;
+
+            hold.p_wrapper = hold.p.find('.popup-wrapper'),
+                hold.p_holder = hold.p.find('.popup-holder'),
+                hold.p_close = hold.p.find('.popup-but-close'),
+                hold.p_prev = hold.p.find('.popup-but-prev'),
+                hold.p_next = hold.p.find('.popup-but-next'),
+                hold.p_preload = hold.p.find('.popup-preload'),
+                hold.p_error = hold.p.find('.popup-error');
+            hold.p_count = hold.p.find('.popup-count');
+
+            keeper.ar = this,
+                keeper.g_ar = {},
+                keeper.total = keeper.ar.length;
+
+            keeper.init = function(ar) {
+                keeper.g_ar = functions.groupElements(0, keeper.total, keeper.ar, {}, options);
+
+                ar.bind('click open', keeper.popup_open);
+            };
+            keeper.popup_open = function() {
+                if (!tr.open) {
+                    line = ($.fn.popup.line.length) ? true : false;
+                    tr.open = functions.openPopup(hold.o, hold.l, hold.p, hold.p_wrapper, hold.p_preload, hold.p_error, body, line, options);
+                    options.onOpen(hold.p);
+                }
+
+                hold.p_holder_old = hold.p_holder,
+                    hold.p_holder = hold.h.clone().hide(),
+                    nav = functions.setPopup($(this), keeper.g_ar[this.getAttribute(options.group)], hold.p_prev, hold.p_next, options),
+                    parent = functions.loadPopup($(this), hold.p, hold.p_wrapper, hold.p_holder, hold.p_holder_old, hold.p_preload, hold.p_error, parent, options);
+                if (options.count) functions.setCount(nav.index, keeper.total, hold, options.countText);
+                return false;
+            };
+            keeper.popup_close = function() {
+                if (tr.open) {
+                    options.onClose(hold.p);
+                    if (parent) {
+                        parent.append(hold.p_holder.find('.popup-content').children());
+                    }
+                    functions.unloadPopup(hold.p_wrapper, hold.p_preload, hold.p_error, options);
+                    tr.open = functions.closePopup(hold.o, hold.l, hold.p, body, line, options);
+                }
+                return false;
+            };
+            keeper.popup_prev = function() {
+                if (nav.prev) {
+                    functions.unloadPopup(hold.p_wrapper, hold.p_preload, hold.p_error, options);
+                    nav.prev.trigger('click');
+                }
+                return false;
+            };
+            keeper.popup_next = function() {
+                if (nav.next) {
+                    functions.unloadPopup(hold.p_wrapper, hold.p_preload, hold.p_error, options);
+                    nav.next.trigger('click');
+                }
+                return false;
+            };
+            keeper.destroy = function() {
+                keeper.ar.unbind('click open', keeper.popup_open);
+                hold.p.remove();
+            };
+
+            // start ******************************
+
+            hold.p.children()
+                .bind('click', function(event) {
+                    event.stopPropagation();
+                });
+            hold.p_close.add(hold.p)
+                .bind('click close', keeper.popup_close);
+            hold.p_prev
+                .bind('click', keeper.popup_prev);
+            hold.p_next
+                .bind('click', keeper.popup_next);
+
+            hold.p.addClass(options.popupClass);
+
+            keeper.init(keeper.ar);
+
+            // end ********************************
+
+            return this;
+
+        },
+        update: function() {
+            var selector = this.selector.replace(/[#]+/g, '1_').replace(/[\.]+/g, '2_').replace(/[^a-z0-9_]+/ig, '').slice(0, 50),
+                keeper = $.fn.popup.keeper[selector],
+                ar, new_el;
+            if (keeper) {
+                ar = this,
+                    new_el = ar.not(keeper.ar);
+            }
+            keeper.ar = ar,
+                keeper.total = ar.length;
+            keeper.init(new_el);
+            return new_el;
+        },
+        destroy: function() {
+            var selector = this.selector.replace(/[#]+/g, '1_').replace(/[\.]+/g, '2_').replace(/[^a-z0-9_]+/ig, '').slice(0, 50),
+                keeper = $.fn.popup.keeper[selector];
+
+            keeper.destroy();
+            $.fn.popup.keeper[selector] = keeper = {};
+        }
+
+    };
+
+    $.fn.popup.functions = {
+        groupElements: function(start, end, ar, g_ar, options) {
+            for (var i = start; i < end; i++) {
+                var g_name = ar[i].getAttribute(options.group);
+                if (!g_name) {
+                    g_name = 'g' + ((options.grouped) ? 0 : i);
+                    ar[i].setAttribute(options.group, g_name);
+                }
+                if (!g_ar[g_name]) g_ar[g_name] = [];
+                g_ar[g_name].push($(ar[i]));
+                ar[i].setAttribute('data-popup-index', g_ar[g_name].length - 1);
+            }
+
+            return g_ar;
+        },
+        openPopup: function(o, l, p, p_wrapper, p_preload, p_error, body, line, options) {
+            l.append(p);
+            o.css({
+                'display': 'block'
+            }).addClass(options.overlayClass);
+            l.css({
+                'display': 'block'
+            }).addClass(options.layerClass);
+            p.css({
+                'display': 'block'
+            });
+            p_wrapper.css({
+                'display': 'none'
+            });
+            p_preload.css({
+                'display': 'block'
+            });
+            p_error.css({
+                'display': 'none'
+            });
+            body.css('overflow', 'hidden');
+
+            if (line) {
+                $.fn.popup.line[$.fn.popup.line.length - 1].css({
+                    'display': 'none'
+                });
+            }
+            $.fn.popup.line.push(p);
+
+            return true;
+        },
+        setPopup: function(e, g, p_prev, p_next, options) {
+            var index = e.data('popup-index'),
+                total = g.length,
+                tr = {
+                    prev: (index) ? true : false,
+                    next: (index != (total - 1)) ? true : false
+                },
+                nav = {
+                    index: index,
+                    prev: (tr.prev) ? g[index - 1] : (options.loop) ? g[total - 1] : null,
+                    next: (tr.next) ? g[index + 1] : (options.loop) ? g[0] : null
+                };
+
+            if (!options.loop) {
+                p_prev.removeClass('disabled').addClass((tr.prev) ? '' : 'disabled');
+                p_next.removeClass('disabled').addClass((tr.next) ? '' : 'disabled');
+            }
+
+            return nav;
+        },
+        loadPopup: function(e, p, p_wrapper, p_holder, p_holder_old, p_preload, p_error, parent_old, options) {
+            var title = e.attr('title'),
+                p_title = p_holder.find('.popup-title'),
+                p_content = p_holder.find('.popup-content'),
+                html, parent;
+
+            switch (options.type) {
+                case 'html':
+                    html = $(e.attr('href').replace(/[^0-9a-zA-Z_#\-]+/g, ''));
+                    parent = html.parent();
+                    break;
+                case 'iframe':
+                    html = $('<iframe class="popup-content-iframe" src="' + e.attr('href') + '" style="width: 100%; height: 100%;" frameborder="0" allowfullscreen="true">Error</iframe>');
+                    break;
+                case 'image':
+                    html = $('<img class="popup-content-image" src="' + e.attr('href') + '" alt="" />');
+                    break;
+                case 'ajax':
+                    options.request.url = e.attr('href') + "?ajax=Y";
+                    html = $('<div class="popup-content-ajax"></div>');
+                    break;
+            }
+
+            p_wrapper.prepend(p_holder);
+            p_title.text((title) ? title : '');
+
+            try {
+                if (html.length != 1) {
+                    throw new Error('Error');
+                }
+                switch (options.type) {
+                    case 'iframe':
+                    case 'image':
+                        p_content.html(html);
+                        html
+                            .bind('load', function() {
+                                return success();
+                            })
+                            .bind('error', function() {
+                                return error();
+                            });
+                        break;
+                    case 'html':
+                        p_content.html(html);
+                        if (parent_old) {
+                            parent_old.append(p_holder_old.find('.popup-content').children());
+                        }
+                        return success();
+                        break;
+                    case 'ajax':
+                        options.request.data = (options.data) ? (options.data === 'data') ? e.data() : $(options.data).serialize() : {};
+                        $.ajax(options.request)
+                            .success(function(data) {
+                                p_content.html(data);
+                                return success();
+                            })
+                            .fail(function() {
+                                return error();
+                            });
+                        break;
+                }
+            } catch (er) {
+                return error();
+            }
+
+            function success() {
+                p_holder_old.remove();
+                p_wrapper.css({
+                    'display': 'block'
+                });
+                p_holder.css({
+                    'display': 'block'
+                });
+                p_preload.css({
+                    'display': 'none'
+                });
+                style();
+                options.onLoad(e, p);
+                return (parent) ? parent : false;
+            }
+
+            function error() {
+                p_holder_old.remove();
+                p_wrapper.css({
+                    'display': 'block'
+                });
+                p_preload.css({
+                    'display': 'none'
+                });
+                p_error.css({
+                    'display': 'block'
+                });
+                style();
+                return false;
+            }
+
+            function style() {
+                var w = (options.width == 'auto' && options.type == 'image') ? html.get(0).width : options.width,
+                    h = options.height;
+                p_wrapper.css({
+                    'max-width': w
+                });
+                p_content.css({
+                    'height': h
+                });
+            }
+        },
+        unloadPopup: function(p_wrapper, p_preload, p_error, options) {
+            p_preload.css({
+                'display': 'block'
+            });
+            p_error.css({
+                'display': 'none'
+            });
+        },
+        closePopup: function(o, l, p, body, line, options) {
+            if (!line) {
+                o.css({
+                    'display': 'none'
+                }).removeClass(options.overlayClass);
+                l.css({
+                    'display': 'none'
+                }).removeClass(options.layerClass);
+                body.css({
+                    'overflow': ''
+                });
+            }
+            p.detach();
+
+            $.fn.popup.line.pop();
+            if (line) {
+                $.fn.popup.line[$.fn.popup.line.length - 1].css({
+                    'display': 'block'
+                });
+            }
+
+            return false;
+        },
+        setCount: function(index, total, hold, text) {
+            hold.p_count.html(text.replace('{current}', (index + 1)).replace('{total}', total));
+        }
+    };
+
+    $.fn.popup.options = {
+        overlay: null,
+        layer: 'body',
+        data: '',
+        overlayClass: '',
+        layerClass: '',
+        popupClass: '',
+        countText: 'Фотография <b>{current}</b> из <b>{total}</b>',
+        count: false,
+        grouped: true,
+        group: 'rel',
+        loop: false,
+        type: 'image', //iframe, image, html, ajax
+        width: 'auto',
+        height: 'auto',
+        request: {},
+        onOpen: function() {}, //(popup)
+        onClose: function() {}, //(popup)
+        onLoad: function() {} //(element, popup)
+    };
+
+    $.fn.popup.keeper = {};
+
+    $.fn.popup.line = [];
+
+})(jQuery);
+
+
+// file ***
+// for input[type=file]
+// $('input').file();
+// $('input').file('destroy');
+
+(function($) {
+
+    $.fn.file = function(method) {
+        if ($.fn.file.methods[method]) {
+            return $.fn.file.methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+        } else if (typeof method === 'object' || !method) {
+            return $.fn.file.methods.init.apply(this, arguments);
+        } else {
+            $.error('Method ' + method + ' does not exist');
+        }
+    };
+
+    $.fn.file.methods = {
+
+        init: function(options) {
+
+            options = $.extend({}, $.fn.file.options, options);
+
+
+            var template = '<div class="file clearfix">' +
+                '<div class="file-button">' +
+                '<div class="button {button_class}">{button_text}</div>' +
+                '</div>' +
+                '</div>';
+
+
+            return this.each(function() {
+
+                // start ******************************
+                var f_custom_class = this.getAttribute('data-class'),
+                    f_custom_text = this.getAttribute('data-text'),
+                    f_change_text = this.getAttribute('data-change-text');
+
+                template = template.replace('{button_text}', f_custom_text).replace('{button_class}', f_custom_class);
+
+                var e = $(this).removeAttr('class id'),
+                    ar = $([]),
+                    total = 0,
+                    f = $(template),
+                    f_but = f.find('.file-button'),
+                    f_holder = f.find('.file-holder'),
+                    f_custom = f.find('.button');
+                var file_change, file_delete, checkup_destroy;
+
+                file_change = function() {
+
+                    var name = this.value,
+                        title = name.replace(/.*\\(.*)/, "$1");
+                    title = title.replace(/.*\/(.*)/, "$1");
+                    if (!title) return;
+                    total++;
+                    if (f_change_text) {
+                        f_custom.html(f_change_text);
+                    }
+                    options.onChange($(this));
+                };
+
+                // action start
+
+                e.before(f);
+                f_but.append(e);
+
+                e.bind('change', file_change);
+                e.trigger('change');
+                // action end
+
+                // api start
+                checkup_destroy = function() {
+                    e.show();
+                    f_holder.after(ar);
+                    f_holder.remove();
+                    ar.unbind('change', file_change);
+                };
+                e.bind('destroy', checkup_destroy);
+                // api end
+
+                // end ********************************
+
+            });
+        },
+        destroy: function() {
+            return this.each(function() {
+                $(this).trigger('destroy');
+            });
+        }
+
+    };
+
+    $.fn.file.options = {
+        onChange: function() {
+
+        }
+    };
+
+})(jQuery);
+
+(function($) {
+    var defaults = {
+        columns: 4,
+        classname: 'f-column',
+        min: 1
+    };
+
+    $.fn.autocolumnlist = function(params) {
+
+        var options = $.extend({}, defaults, params);
+
+        return this.each(function() {
+
+            var els = $(this).children();
+            var dimension = els.size();
+
+            if (dimension > 0) {
+                var elCol = Math.ceil(dimension / options.columns);
+                if (elCol < options.min) {
+                    elCol = options.min;
+                }
+                var start = 0;
+                var end = elCol;
+
+                for (i = 0; i < options.columns; i++) {
+                    if ((i + 1) == options.columns) {
+                        els.slice(start, end).wrapAll('<div class="' + options.classname + ' f-last" />');
+                    } else {
+                        els.slice(start, end).wrapAll('<div class="' + options.classname + '" />');
+                    }
+                    start = start + elCol;
+                    end = end + elCol;
+                }
+            }
+        });
+    };
+})(jQuery);

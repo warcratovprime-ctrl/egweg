@@ -1,0 +1,426 @@
+var regions = null;
+console.log('map-here');
+$(function() {
+    //breakpoint 768px tablet
+    const breakpoint_map = window.matchMedia('(max-width:768px)');
+    const breakpointChecker_map = function() {
+        if (breakpoint_map.matches === false) {
+            if (regions) return false;
+            $.post('/intermap/', function(response) {
+                $('.header').after(response);
+                var bn_map = $('.bn-map');
+                for (var i = 0; i < 100; i++) {
+
+                    setTimeout(function() {
+                        bn_map.circleProgress('value', i / 100);
+                    }, 50)
+                }
+
+            });
+
+
+            //fix IE11
+            var isIE11 = !!window.MSInputMethodContext && !!document.documentMode;
+            if (isIE11 != false) {
+
+                if (!String.prototype.padStart) {
+                    String.prototype.padStart = function padStart(targetLength, padString) {
+                        targetLength = targetLength >> 0; //truncate if number, or convert non-number to 0;
+                        padString = String(typeof padString !== 'undefined' ? padString : ' ');
+                        if (this.length >= targetLength) {
+                            return String(this);
+                        } else {
+                            targetLength = targetLength - this.length;
+                            if (targetLength > padString.length) {
+                                padString += padString.repeat(targetLength / padString.length); //append to original to ensure we are longer than needed
+                            }
+                            return padString.slice(0, targetLength) + String(this);
+                        }
+                    };
+                }
+
+                if (!String.prototype.repeat) {
+                    String.prototype.repeat = function(count) {
+                        'use strict';
+                        if (this == null)
+                            throw new TypeError('can\'t convert ' + this + ' to object');
+
+                        var str = '' + this;
+                        // To convert string to integer.
+                        count = +count;
+                        // Check NaN
+                        if (count != count)
+                            count = 0;
+
+                        if (count < 0)
+                            throw new RangeError('repeat count must be non-negative');
+
+                        if (count == Infinity)
+                            throw new RangeError('repeat count must be less than infinity');
+
+                        count = Math.floor(count);
+                        if (str.length == 0 || count == 0)
+                            return '';
+
+                        // Ensuring count is a 31-bit integer allows us to heavily optimize the
+                        // main part. But anyway, most current (August 2014) browsers can't handle
+                        // strings 1 << 28 chars or longer, so:
+                        if (str.length * count >= 1 << 28)
+                            throw new RangeError('repeat count must not overflow maximum string size');
+
+                        var maxCount = str.length * count;
+                        count = Math.floor(Math.log(count) / Math.log(2));
+                        while (count) {
+                            str += str;
+                            count--;
+                        }
+                        str += str.substring(0, maxCount - str.length);
+                        return str;
+                    }
+
+                }
+            }
+
+            $('#map-zoom').on('change mousemove', function() {
+                $('#map-holder svg').css('transform', 'scale(1.' + $(this).val().padStart(2, '0') + ')');
+            });
+
+            initMap($('#map-1'), $('#map-svg'), $('#map-holder'), $('#map-topholder'), $('#map-zoom'), $('#map-popup'), 1092, 630, 0); //1092, 630, 0
+
+
+            //$('#map-1-but').click(function () {
+            document.read
+
+
+
+
+        }
+    };
+    breakpoint_map.addListener(breakpointChecker_map);
+    breakpointChecker_map();
+
+
+
+    $('#filter-4 select').on('change', function(e) {
+        //$('#filter-4').on('change', '.bn-filter-item', function (e) {
+        e.preventDefault();
+        var elem = $(this);
+        var filter = elem.parent();
+        var list = $('#list-7');
+        var id_region = $('#regions option:selected').val()
+        $.ajax({
+            url: '/intermap/regions/' + id_region,
+            type: 'get',
+            dataType: 'json',
+            async: false,
+            success: function(result) {
+                filter.find('.bn-filter-item').removeClass('selected');
+                elem.addClass('selected');
+
+                list.html(result.list);
+            }
+        });
+    });
+});
+
+/*************************************/
+var map_trigger = false,
+    map_width, map_height, map_moved = false;
+
+function initMap(map, svg, h_svg, th_svg, zoom, popup, svg_w, svg_h, scale) {
+
+    if (!map.length) return;
+    var prop = svg[0].getAttribute('viewBox').split(' ');
+    svg_w = prop[2];
+    svg_h = prop[3];
+    if (th_svg) th_svg = map.children().first();
+    map.css('display', 'block');
+    var zoom_w = zoom.width(),
+        s_zoom = zoom.children(),
+        width = th_svg.width() || 0,
+        height = th_svg.height() || 0,
+        scale_t = height / svg_h,
+        scale_base = Math.min(height / svg_h, width / svg_w),
+        click = true,
+        show = false,
+        x_start, y_start,
+        x_max, y_max,
+        temp, left, top;
+    map.css('display', '');
+
+    var bind_move1 = function(event) {
+            if (event.originalEvent.touches) {
+                event.pageX = event.originalEvent.touches[0].pageX;
+                event.pageY = event.originalEvent.touches[0].pageY;
+            };
+
+            x_cur = event.pageX,
+                scale = (x_cur - x_start) / zoom_w,
+                scale = (scale < 0) ? 0 : (scale > 1) ? 1 : scale;
+            setMapScale(h_svg, s_zoom, svg_w, svg_h, scale, scale_t, scale_base);
+            setMapPos(h_svg, width, height);
+            event.preventDefault();
+
+        },
+        bind_move2 = function(event) {
+            if (event.originalEvent.touches) {
+                event.pageX = event.originalEvent.touches[0].pageX;
+                event.pageY = event.originalEvent.touches[0].pageY;
+            };
+
+            var stopper = (scale_t > 1) ? true : false;
+
+            click = false,
+                x_cur = event.pageX,
+                y_cur = event.pageY,
+                x = x_cur - x_start,
+                y = y_cur - y_start;
+
+            stopper = (y > 0 || y < y_max) ? false : true;
+
+            x = (x > 0) ? 0 : (x < x_max) ? x_max : x,
+                y = (y > 0) ? 0 : (y < y_max) ? y_max : y;
+            h_svg.css({
+                'left': x,
+                'top': y
+            });
+
+            if (stopper) event.preventDefault();
+        };
+
+
+    setMapScale(h_svg, s_zoom, svg_w, svg_h, scale, scale_t, scale_base);
+
+    $(window).bind('resize', function() {
+        zoom_w = zoom.width(),
+            s_zoom = zoom.children(),
+            width = th_svg.width(),
+            height = th_svg.height();
+    });
+
+    s_zoom
+        .bind('mousedown touchstart', function(event) {
+            if (event.originalEvent.touches) {
+                event.pageX = event.originalEvent.touches[0].pageX;
+                event.pageY = event.originalEvent.touches[0].pageY;
+            };
+
+            x_start = event.pageX - s_zoom.position().left,
+                x_cur = event.pageX;
+            $(document).bind('mousemove touchmove', bind_move1);
+        });
+    h_svg
+        .bind('mousedown touchstart', function(event) {
+            if (event.originalEvent.touches) {
+                event.pageX = event.originalEvent.touches[0].pageX;
+                event.pageY = event.originalEvent.touches[0].pageY;
+            };
+
+            if (map_trigger) {
+                try {
+                    left = th_svg.offset().left
+                } catch (e) {
+                    left = 0
+                }
+                try {
+                    top = th_svg.offset().top
+                } catch (e) {
+                    top = 0
+                }
+                x_start = event.pageX - h_svg.position().left,
+                    x_cur = x_start,
+                    y_start = event.pageY - h_svg.position().top,
+                    y_cur = y_start,
+                    x = 0,
+                    y = 0,
+                    x_max = width - map_width,
+                    y_max = height - map_height;
+                click = true,
+                    map_moved = true;
+                $(document).bind('mousemove touchmove', bind_move2);
+            };
+        });
+    svg.find('#svg_pol g')
+        .bind('click', function(event) {
+            if (click && regions && regions[this.id]) {
+
+                setMapPopup(popup, regions[this.id]);
+                popup.show();
+                try {
+                    left = th_svg.offset().left
+                } catch (e) {
+                    left = 0
+                }
+                try {
+                    top = th_svg.offset().top
+                } catch (e) {
+                    top = 0
+                }
+                var x_max = width - popup.outerWidth(false) - 10,
+                    y_max = height - popup.outerHeight(false) - 10,
+                    x = event.pageX - left + 5,
+                    y = event.pageY - top - 20;
+                x = (x < 10) ? 10 : (x > x_max) ? x - popup.outerWidth(false) - 10 : x,
+                    y = (y < 10) ? 10 : (y > y_max) ? y_max : y;
+                popup.css({
+                    'left': x,
+                    'top': y
+                });
+                svg.find('#svg_pol g').children('path, polygon').css({
+                    'fill': ''
+                });
+                temp = $(this).children('path, polygon');
+                temp.css({
+                    'fill': '#ababad'
+                });
+                show = true;
+                $(document).unbind('mousemove touchmove', bind_move2);
+                event.stopPropagation();
+
+            };
+
+        });
+    th_svg
+        .bind('click', function(event) {
+            if (show) {
+                popup.hide();
+                temp.css({
+                    'fill': ''
+                });
+                show = false;
+            };
+        })
+    /*.bind('mousewheel', function (event, delta) {
+
+        scale = scale + 0.1 * delta,
+            scale = (scale < 0) ? 0 : (scale > 1) ? 1 : scale;
+        setMapScale(h_svg, s_zoom, svg_w, svg_h, scale, scale_t, scale_base);
+        setMapPos(h_svg, width, height);
+        if (show) {
+            popup.hide();
+            temp.css({
+                'fill': ''
+            });
+            show = false;
+        };
+        return false;
+    });*/
+
+    $(document).bind('mouseup touchend', function(event) {
+        $(document).unbind('mousemove touchmove', bind_move1);
+    });
+    $(document).bind('click touchend', function(event) {
+        $(document).unbind('mousemove touchmove', bind_move2);
+        if (show) {
+            //popup.hide();
+            //temp.css({ 'fill' : '' });
+            show = false;
+        };
+    });
+    var bn_map = $('.bn-map');
+    bn_map.addClass('f-loading');
+    bn_map.circleProgress({
+        value: 0,
+        fill: {
+            color: "#365799",
+            gradientAngle: Math.PI / 4 * 3
+        },
+        animation: {
+            duration: 1000
+        }
+    }).on('circle-animation-progress', function(_, _, stepValue) {
+        if (stepValue == 1) {
+            $(bn_map.circleProgress('widget')).remove();
+            bn_map.removeClass('f-loading');
+        }
+    })
+};
+
+function setMapScale(h_svg, s_zoom, svg_w, svg_h, scale, scale_t, scale_base) {
+    map_width = svg_w * (scale + scale_base),
+        map_height = svg_h * (scale + scale_base);
+    h_svg.css({
+        'width': map_width,
+        'height': map_height
+    });
+    s_zoom.css({
+        'left': (scale * 100) + '%'
+    });
+    map_trigger = ((scale + scale_base) > scale_t) ? true : false;
+};
+
+function setMapPos(h_svg, w, h) {
+    if (map_trigger) {
+        if (!map_moved) {
+            // h_svg.css({ 'left' : (w-map_width)/2, 'top' : (h-map_height)/2, 'margin' : 0 });
+        } else {
+            var x = h_svg.position().left,
+                y = h_svg.position().top,
+                x_max = w - map_width,
+                y_max = h - map_height;
+            x = (x > 0) ? 0 : (x < x_max) ? x_max : x,
+                y = (y > 0) ? 0 : (y < y_max) ? y_max : y;
+            h_svg.css({
+                'left': x,
+                'top': y,
+                'margin': 0
+            });
+        };
+    } else {
+        map_trigger = false;
+        map_moved = false;
+        h_svg.css({
+            'left': '',
+            'top': '',
+            'margin': ''
+        });
+    };
+
+};
+var map_popup = '<div class="map-popup__header">{city}</div>' +
+    '<div class="map-popup__desc"><p class="map-popup__region">{region}</p>{list}<div class="map-popup__separator"></div><p class="map-popup__region">{main}</p>' +
+    '<ul class="map-popup__list">' +
+    '<li class="map-popup__adress">{m_address}</li><li class="map-popup__link"><a href="https://{m_link}">{m_link}</a></li><li class="map-popup__phone">{m_phone}</li>' +
+    '</ul></div>';
+
+var map_popup2 = '<div class="map-popup__header">{city}</div>' +
+    '<div class="map-popup__desc"><p class="map-popup__region">{region}</p>{list}</div>';
+var map_popup_list = '<ul class="map-popup__list">' +
+    '<li class="map-popup__adress">{r_address}</li><li class="map-popup__link"><a href="https://{r_link}">{r_link}</a></li><li class="map-popup__phone">{r_phone}</li>' +
+    '</ul>';
+
+function setMapPopup(popup, ar) {
+    var html;
+
+    if (ar.main !== '')
+        html = map_popup;
+    else
+        html = map_popup2;
+
+    var ql = '';
+
+    if (ar.list) {
+        for (var i = 0, l = ar.list.length; i < l; i++) {
+            if (ar.list[i].r_name) ql += '<div class="bm-popup-place">' + ar.list[i].r_name + '</div>';
+            ql += map_popup_list.replace(/{[^{}]+}/g, function(key) {
+                return ar.list[i][key.replace(/[{}]+/g, "")] || "";
+            });
+        };
+    } else {
+        ql += map_popup_list.replace(/{[^{}]+}/g, function(key) {
+            return ar[key.replace(/[{}]+/g, "")] || "";
+        });
+    };
+
+
+    html = html.replace('{list}', ql);
+
+    html = html.replace(/{[^{}]+}/g, function(key) {
+        return ar[key.replace(/[{}]+/g, "")] || "";
+    });
+
+    popup.html(html);
+};
+
+
+/*************************************/

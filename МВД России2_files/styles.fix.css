@@ -1,0 +1,426 @@
+.submenu__list .submenu__link, .top-list .top-list__link{text-transform: none;}
+.person-info__send button{cursor: pointer;}
+.breadcrumbs__list{display: block;}
+.breadcrumbs__item{display: inline;}
+.breadcrumbs__item:not(:last-of-type){float: none;margin-right: 12px;}
+.breadcrumbs__item:not(:last-of-type):after {position: relative;right: -6px;}
+.button--showmore__district{margin-top: 60px;}
+.district-list .open-map {
+    display: inline-block;
+    margin-top: 20px;
+    color: #365799;
+    cursor: pointer;
+    border-bottom: 1px #365799 solid;
+}
+.expansion {
+  cursor: pointer;
+}
+.pseudo_link {
+  cursor: pointer;
+}
+.pseudo_link:hover {
+  text-decoration: underline;
+}
+.department__wrapper img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* fix Кнопки версии для слабовидящих на телефонах */
+@media (max-width: 767px) {
+  .top-line__item-controls .header__blind {
+    font-size: 0;
+  }
+}
+
+/* Добавление подложки слайдеру на главной */
+.slider--gradient .slider-news__item::after {
+  content: '';
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgb(61 121 176 / 80%) 60%, #2c7ac4 100%);
+  position: absolute;
+  width: 100%;
+  height: 40%;
+  left: 0;
+  bottom: 0;
+}
+
+.slider--gradient .slider-news__item .slider-news-info {
+  z-index: 2;
+}
+
+.top-news__all-link {
+  position: absolute;
+  top: auto;
+  right: auto;
+  bottom: 10px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+}
+
+.header__blind {
+  width: auto;
+  margin: 0;
+}
+
+.top-line__item-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+@media (max-width: 767px) {
+  .slider--gradient .slider-news__item::after {
+    height: 60%;
+  }
+
+  .slider-news-info {
+    padding: 12px;
+  }
+
+  .slider-news-info__datatime.data-time,
+  a.slider-news-info__link {
+    color: #fff !important;
+  }
+}
+
+/* fix иконок */
+.services__pic--fix {
+  transform: translate(0, 0) !important;
+  position: static;
+  flex-shrink: 0;
+}
+
+.services__pic--fix img {
+  width: 100% !important;
+  height: auto !important;
+}
+
+.services__desc--fix {
+  transform: translate(0, 0) !important;
+  position: static;
+}
+
+.services__inner--fix {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding: 12px 24px;
+}
+
+@media (max-width: 767px) {
+  .services__pic--fix {
+    width: 60px;
+    height: 60px;
+  }
+
+  .services__inner--fix img {
+    width: 100%;
+    height: auto;
+  }
+}
+
+/* fix заголовка Прямая речь */
+.speach .speach__header {
+  margin-bottom: 24px;
+}
+
+.speach .speach__header a {
+  font-size: 32px;
+  text-decoration: none;
+  color: #000;
+}
+
+/* fix Модальных окон конкурсов */
+/* TODO Как можно скорее переписать конкурсы с нуля. Поддерживать инлайн стили невозможно! */
+.section-detail--fix {
+  position: relative;
+}
+
+.section-detail--fix .sl-detail-photo {
+  position: absolute !important;
+  right: 0;
+  top: 12px;
+}
+
+.section-detail--fix .sl-detail-vote {
+  width: 62px !important;
+  height: 62px !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  line-height: 0 !important;
+  font-size: 20px !important;
+}
+
+.contest-section--fix .icon-heart {
+  color: #fff;
+  font-size: 22px;
+}
+
+@media(max-width: 768px) {
+  .section-detail--fix .sl-detail-vote {
+    width: 38px !important;
+    height: 38px !important;
+  }
+  .contest-section--fix .icon-heart {
+    font-size: 16px;
+  }
+}
+
+
+.contest-section--fix p:has(img) img {
+  width: 100%;
+  height: auto;
+}
+
+.contest-section--fix h2.contest {
+  color: #588aca;
+  font-size: 18px;
+}
+
+.contest-section--fix .sl-detail-vote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 !important;
+  right: -12px !important;
+  top: 24px !important;
+  top: 0 !important;
+  bottom: auto !important;
+  left: auto !important;
+}
+
+/* Исправление ширины блока управлений */
+.unit__info--fix {
+  width: 64.2% !important;
+}
+
+.section.department__cards-list {
+  margin-top: 24px;
+}
+
+/* fix файловой таблицы */
+.file_table td.icon {
+  width: auto !important;
+}
+
+/* fix карты */
+#map-svg g.region,
+#map-svg g.region>polygon {
+  fill: #fff;
+}
+
+#map-svg g:hover>path,
+#map-svg g:hover>polygon {
+  fill: #ababad;
+}
+
+#map-svg .region polygon,
+#map-svg .region path {
+  stroke: #ababad !important;
+  stroke-width: 0.5 !important;
+}
+
+/* fix медиа галлереи */
+.gallery-fix {
+  width: 100%;
+}
+
+.gallery-fix .bb-title {
+  margin-bottom: 24px;
+}
+
+.gallery-fix h2 a {
+  color: #000 !important;
+  text-decoration: none;
+}
+
+.gallery-fix .sl-item-title {
+  margin-top: 8px;
+  width: 50%;
+}
+
+@media (max-width: 768px) {
+  .gallery-fix .sl-item-title {
+    width: 100%;
+  }
+}
+
+.gallery-fix .sl-item-title a {
+  font-size: 16px;
+  text-decoration: none;
+}
+
+.gallery-fix .sl-item-date {
+  font-size: 14px;
+  color: #2c7ac4;
+}
+
+.gallery-fix .f-right.links a {
+  color: #2c7ac4;
+  text-decoration: none;
+  border: none;
+  font-size: 14px;
+}
+
+/* fix галлереи внутри страницы пресс службы */
+.content-gallery-fix .gal__item a img {
+  width: 100% !important;
+  height: auto !important;
+}
+
+/* fix выпадающего списка */
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+  background-color: #365799;
+}
+
+/* fix календаря */
+.select-calendar__title {
+  font-size: 18px;
+}
+
+/* fix пагинации поиска */
+.pagination_list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.pagination .next,
+.pagination .prev {
+  margin: 0;
+  float: none;
+}
+
+/* fix удалить декоратор */
+.decorator {
+  z-index: -1 !important;
+}
+
+/* fix формы подписки на новости и обновления */
+.subscribe-form--fix .bn-form form {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+@media(max-width: 767px) {
+  .subscribe-form--fix .popup-wrapper {
+    max-width: 100%;
+  }
+
+  .subscribe-form--fix .bn-form form {
+    flex-direction: column;
+     align-items: stretch;
+  }
+  .subscribe-form--fix .bn-form form button {
+    width: 100%;
+  }
+}
+
+.subscribe-form--fix .popup-wrapper {
+  max-width: 600px;
+}
+
+.subscribe-form--fix .bf-item {
+  width: 100%;
+}
+
+/* fix Календаря */
+.news-calendar .flex-container  {
+  justify-content: space-between;
+}
+
+.news-calendar .flex-container .select.select-calendar {
+  width: auto;
+  max-width: fit-content;
+}
+
+/* fix иконок структуры для экстра блока */
+.person--minister .person__links-icon {
+  fill: white;
+}
+
+/* Новая плиточная система для сервисного списка */
+@media(max-width: 767px) {
+        .grid-system .services__list--1 .services__item,
+        .grid-system .services__list--2 .services__item,
+        .grid-system .services__list--3 .services__item  {
+            flex-basis: 100% !important;
+        }
+    }
+
+    .grid-system .services__list--1 .services__item {
+        flex-basis: 100% !important;
+    }
+
+    .grid-system .services__list--2 .services__item {
+        flex-basis: calc(50% - 32px) !important;
+    }
+
+    .grid-system .services__list--3 .services__item {
+        flex-basis: calc(33.3% - 32px) !important;
+    }
+
+    .grid-system .services__item:nth-last-child(-n+2) {
+        flex-grow: 1 !important;
+    }
+
+
+    /* fix Голосования */
+.opros-list__title {
+	font-weight: bold;
+}
+
+/* fix Пагинации видеоархива */
+
+.pagination tr {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+	padding-bottom: 16px;
+}
+
+.pagination--fix a {
+	width: 40px;
+	height: 40px;
+	font-size: 16px !important;
+	color: #365799 !important;
+	text-decoration: none !important;
+}
+
+
+.pagination--fix a.active {
+	background: none !important;
+	border-radius: 0 !important;
+	position: relative;
+}
+
+.pagination--fix a.active::before {
+	display: flex;
+	content: '';
+	width: 40px;
+	height: 2px;
+	background-color: #365799;
+	position: absolute;
+	left: 0;
+	bottom: -16px;
+}
+
+/* fix новостей на главной странице */
+.news-list__link {
+  font-size: 18px;
+  line-height: normal;
+}
+
+.timeTo.timeTo-white {
+  list-style: none !important
+}
+
+.timeTo.timeTo-white li::before {
+  display: none !important;
+}

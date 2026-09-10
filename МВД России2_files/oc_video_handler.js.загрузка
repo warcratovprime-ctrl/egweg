@@ -1,0 +1,12 @@
+$(function() {
+    $('.oc-video').each(function() {
+        var video = '';
+
+        video += '<video controls style="max-width: 100%">';
+        video += '<source src="' + $(this).attr('alt') + '"</source>';
+        video += '</video>';
+
+        $(this).parent().append(video);
+        $(this).remove();
+    });
+});

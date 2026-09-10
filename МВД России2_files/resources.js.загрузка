@@ -1,0 +1,135 @@
+// 'use strict';
+// $(document).ready(function() {
+//     var isMobile = document.documentElement.clientWidth < 768;
+//     var resourcesItems = document.querySelectorAll('.resources__item');
+//     var resourcesList = Array.prototype.slice.call(resourcesItems);
+//     if (resourcesList.length > 0) {
+//         var resourcesShowmore = document.querySelector('.resources__showmore');
+//         var maxVisibleItems = isMobile ? 7 : 11;
+//         var lastVisible = resourcesList[maxVisibleItems];
+//         var delay = isMobile ? 0 : 30;
+//         var hiddenResources = resourcesList.filter(function(item, index) {
+//             return index > maxVisibleItems;
+//         });
+//         hiddenResources.forEach(function(item) {
+//             return item.classList.add('resources__item--hidden');
+//         });
+
+//         if (isMobile) {
+//             lastVisible.classList.add('resources__item--last');
+//         };
+
+//         hiddenResources.forEach(function(item) {
+//             item.classList.add('resources__item--hidden');
+//             item.classList.add('resources__item--faded');
+//         });
+
+//         hiddenResources.length > 0 ? resourcesShowmore.onclick = function() {
+//             toggleVisibility();
+//         } : resourcesShowmore.style.display = 'none';
+
+//         function toggleVisibility() {
+//             if (isMobile) {
+//                 lastVisible.classList.toggle('resources__item--last');
+//                 hiddenResources[0].scrollIntoView({
+//                     behavior: 'smooth',
+//                     block: "center"
+//                 });
+//             };
+//             resourcesShowmore.classList.toggle('resources__showmore--active');
+//             resourcesShowmore.classList.contains('resources__showmore--active') ? resourcesShowmore.textContent = 'Скрыть' : resourcesShowmore.textContent = 'Показать еще';
+
+//             if (hiddenResources[0] && (hiddenResources[0].classList.contains('resources__item--hidden') || hiddenResources[0].classList.contains('resources__item--faded'))) {
+//                 hiddenResources.forEach(function(item, index) {
+//                     setTimeout(function() {
+//                         item.classList.toggle('resources__item--faded');
+//                     }, delay / 2 * index);
+//                     setTimeout(function() {
+//                         item.classList.toggle('resources__item--hidden');
+//                     }, delay * index);
+//                 });
+//             } else {
+//                 hiddenResources.slice().reverse().forEach(function(item, index) {
+//                     setTimeout(function() {
+//                         item.classList.toggle('resources__item--faded');
+//                     }, delay / 2 * index);
+//                     setTimeout(function() {
+//                         item.classList.toggle('resources__item--hidden');
+//                     }, delay * index);
+//                 });
+//             }
+//         };
+//     };
+// });
+
+'use strict';
+$(document).ready(function() {
+    var isMobile = document.documentElement.clientWidth < 768;
+    var resourcesItems = document.querySelectorAll('.resources__item');
+    var resourcesList = Array.prototype.slice.call(resourcesItems);
+
+    if (resourcesList.length > 0) {
+        var resourcesShowmore = document.querySelector('.resources__showmore');
+        var maxVisibleItems = isMobile ? 7 : 11;
+        var lastVisible = resourcesList[maxVisibleItems];
+        var delay = isMobile ? 0 : 30;
+
+        var hiddenResources = resourcesList.filter(function(item, index) {
+            return index > maxVisibleItems;
+        });
+
+        hiddenResources.forEach(function(item) {
+            item.classList.add('resources__item--hidden');
+            item.classList.add('resources__item--faded');
+        });
+
+        if (isMobile && lastVisible) {
+            lastVisible.classList.add('resources__item--last');
+        }
+
+        if (resourcesShowmore) {
+            if (hiddenResources.length > 0) {
+                resourcesShowmore.onclick = function() {
+                    toggleVisibility();
+                };
+            } else {
+                resourcesShowmore.style.display = 'none';
+            }
+        }
+
+        function toggleVisibility() {
+            if (isMobile && lastVisible) {
+                lastVisible.classList.toggle('resources__item--last');
+                hiddenResources[0]?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: "center"
+                });
+            }
+
+            resourcesShowmore.classList.toggle('resources__showmore--active');
+            resourcesShowmore.textContent = resourcesShowmore.classList.contains('resources__showmore--active')
+                ? 'Скрыть'
+                : 'Показать еще';
+
+            if (hiddenResources[0] && (hiddenResources[0].classList.contains('resources__item--hidden') || hiddenResources[0].classList.contains('resources__item--faded'))) {
+                hiddenResources.forEach(function(item, index) {
+                    setTimeout(function() {
+                        item.classList.toggle('resources__item--faded');
+                    }, delay / 2 * index);
+                    setTimeout(function() {
+                        item.classList.toggle('resources__item--hidden');
+                    }, delay * index);
+                });
+            } else {
+                hiddenResources.slice().reverse().forEach(function(item, index) {
+                    setTimeout(function() {
+                        item.classList.toggle('resources__item--faded');
+                    }, delay / 2 * index);
+                    setTimeout(function() {
+                        item.classList.toggle('resources__item--hidden');
+                    }, delay * index);
+                });
+            }
+        }
+    }
+});
